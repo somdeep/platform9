@@ -40,7 +40,7 @@ main(int argc,char * argv[])
                 err_sys("signal error");
 
         if(argc==1)
-        strcpy(buf,"ls");
+            strcpy(buf,"ls");
             
         else if(argc>1)
         strcpy(buf,argv[1]);
@@ -51,7 +51,7 @@ main(int argc,char * argv[])
         {
             execArgs[i]=argv[i+1];
         }
-        execArgs[argc]=NULL;
+        execArgs[argc-1]=NULL;
 
 
 
