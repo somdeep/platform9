@@ -1,2 +1,2 @@
-launchx: shell.c error.c
+shell: shell.c error.c
 	cc -o shell shell.c error.c -lm

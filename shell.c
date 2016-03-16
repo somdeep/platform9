@@ -1,11 +1,12 @@
-#include<stdlib.h>
-#include<time.h>
+#include <stdlib.h>
+#include <time.h>
 #include "apue.h"
 #include <sys/wait.h>
 #include <string.h>
-#include<math.h>
-
-
+#include <math.h>
+#include <stdio.h>  
+#include <string.h> 
+#include "makeargv.c"
 // Shell command interpreter: Write a tool to implement bash-like functionality.
 // The tool should  
 // 1. Allow user to execute any commands, display output/errors
@@ -39,46 +40,72 @@ main(int argc,char * argv[])
          if (signal(SIGINT, sig_int) == SIG_ERR)
                 err_sys("signal error");
 
-        if(argc==1)
-            strcpy(buf,"ls");
+     
+        while(1)
+        {    
+        printf("Enter command : \n");
+        //("%s",buf);
+        gets(buf);
+        printf("%s\n",buf );
+        char *execArgs[20];
+
+        int i=0;
+        int len=strlen(buf);
+        char delimit[]={' '};
+        char *dup=strdup(buf);
+        char delim;
+      
+
+        char* token = strtok(buf, delimit);
+        while (token) {
+            printf("token: %s\n", token);
+            printf("%s\n",buf );
+            delim=dup[token-buf+strlen(token)];
+            printf("delim : %c\n", delim);
             
-        else if(argc>1)
-        strcpy(buf,argv[1]);
+            execArgs[i]=token;
+            // if(delim=='|')
+            // {
+            //     execArgs[++i]=malloc(sizeof(delim));
+            //     *execArgs[i]=delim;
+            // }    
+             token = strtok(NULL, delimit);
+            i++;
 
-        char *execArgs[argc];
-
-        for (int i = 0; i < argc-1; ++i)
-        {
-            execArgs[i]=argv[i+1];
         }
-        execArgs[argc-1]=NULL;
+    
+        execArgs[i]=NULL;
 
 
 
-       // printf("%s\n",buf );
+        
         
                 if ((pid = fork()) < 0) {
                         err_sys("fork error");
                 } else if (pid == 0) {      /* child */
                         // execvp("ls", argv);
                          
-                        execvp(argv[1], execArgs);
+                         
+                       
+                        execvp(execArgs[0], execArgs);
 
-                        err_ret("couldn't execute: %s", argv);
-                        exit(127);
-                }
-               /* parent */
+                        err_ret("couldn't execute: %s", execArgs);
+                         exit(127);
+                    }
+                /* parent */
                 if ((pid = waitpid(pid, &status, 0)) < 0)
                         err_sys("waitpid error");
 
       
         
     
-                
+            }
             
         
         exit(0);
 }
+
+
 
 void
 sig_int(int signo)
