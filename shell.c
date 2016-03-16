@@ -5,7 +5,7 @@
 #include <string.h>
 #include <math.h>
 #include <stdio.h>  
-#include <string.h> 
+
 #include "makeargv.c"
 // Shell command interpreter: Write a tool to implement bash-like functionality.
 // The tool should  
@@ -33,7 +33,10 @@ main(int argc,char * argv[])
          //    printf("\nOnly single argument supported\n");
          //    exit(0);
          // }
-        char    buf[MAXLINE];   /* from apue.h */
+        char    buf[MAXLINE];
+       /* from apue.h */
+        char    first[MAXLINE];
+        char    second[MAXLINE];
         pid_t   pid;
         int     status;
        
@@ -54,31 +57,63 @@ main(int argc,char * argv[])
         char delimit[]={' '};
         char *dup=strdup(buf);
         char delim;
-      
+        int flag=0;
+        char *sec[10];
+        int j=0;
 
-        char* token = strtok(buf, delimit);
-        while (token) {
+
+        for(i=0;i<len;i++)
+        {
+            if(buf[i]=='|')
+                break;
+            first[i]=buf[i];
+
+        }
+
+        first[i]='\0';
+        i++;
+        while(i<len)
+        {
+            second[j++]=buf[i];
+            i++;
+
+        }
+
+        second[j]='\0';
+
+       
+        i=0;j=0;
+
+        char* token = strtok(first, delimit);
+        while (token) 
+        {
             printf("token: %s\n", token);
-            printf("%s\n",buf );
-            delim=dup[token-buf+strlen(token)];
+            delim=dup[token-first+strlen(token)];
             printf("delim : %c\n", delim);
             
-            execArgs[i]=token;
-            // if(delim=='|')
-            // {
-            //     execArgs[++i]=malloc(sizeof(delim));
-            //     *execArgs[i]=delim;
-            // }    
+            execArgs[i]=token;    
              token = strtok(NULL, delimit);
-            i++;
+            i++;    
 
         }
     
         execArgs[i]=NULL;
 
+        i=0;
+        token = strtok(second, delimit);
+        while (token) 
+        {
+            printf("token: %s\n", token);
+            delim=dup[token-second+strlen(token)];
+            printf("delim : %c\n", delim);
+            
+            sec[i]=token;    
+             token = strtok(NULL, delimit);
+            i++;    
 
+        }
 
-        
+        sec[i]=NULL;
         
                 if ((pid = fork()) < 0) {
                         err_sys("fork error");
@@ -87,7 +122,7 @@ main(int argc,char * argv[])
                          
                          
                        
-                        execvp(execArgs[0], execArgs);
+                        execvp(sec[0], sec);
 
                         err_ret("couldn't execute: %s", execArgs);
                          exit(127);
@@ -110,5 +145,7 @@ main(int argc,char * argv[])
 void
 sig_int(int signo)
 {
-        printf("interrupt\n%% ");
+        printf("Exiting\n");
+
+        exit(0);
 }
