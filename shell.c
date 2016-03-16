@@ -5,8 +5,9 @@
 #include <string.h>
 #include <math.h>
 #include <stdio.h>  
+#include <unistd.h> 
 
-#include "makeargv.c"
+#include "try.c"
 // Shell command interpreter: Write a tool to implement bash-like functionality.
 // The tool should  
 // 1. Allow user to execute any commands, display output/errors
@@ -46,7 +47,7 @@ main(int argc,char * argv[])
      
         while(1)
         {    
-        printf("Enter command : \n");
+        printf("\n%%");
         //("%s",buf);
         gets(buf);
         printf("%s\n",buf );
@@ -80,16 +81,17 @@ main(int argc,char * argv[])
         }
 
         second[j]='\0';
-
+        printf("%s\n",first );
+        printf("%s\n",second );
        
         i=0;j=0;
 
         char* token = strtok(first, delimit);
         while (token) 
         {
-            printf("token: %s\n", token);
-            delim=dup[token-first+strlen(token)];
-            printf("delim : %c\n", delim);
+            printf("token in first: %s\n", token);
+            // delim=dup[token-first+strlen(token)];
+            // printf("delim : %c\n", delim);
             
             execArgs[i]=token;    
              token = strtok(NULL, delimit);
@@ -98,40 +100,75 @@ main(int argc,char * argv[])
         }
     
         execArgs[i]=NULL;
-
+        printf("%s\n",first );
+        printf("%s\n",second );
+        
         i=0;
-        token = strtok(second, delimit);
-        while (token) 
+        token=NULL;
+
+
+        char *t = strtok(second, delimit);
+        while (t) 
         {
-            printf("token: %s\n", token);
-            delim=dup[token-second+strlen(token)];
-            printf("delim : %c\n", delim);
+            printf("t: %s\n", t);
+            //delim=dup[token-second+strlen(token)];
+            //printf("delim : %c\n", delim);
             
-            sec[i]=token;    
-             token = strtok(NULL, delimit);
+            sec[i]=t;    
+             t= strtok(NULL, delimit);
             i++;    
 
         }
 
         sec[i]=NULL;
+        int p[2];
+        pipe(p);
+
+
+        // if(sec[0]!=NULL)
+        // printf("%s\n",sec[0] );
         
-                if ((pid = fork()) < 0) {
-                        err_sys("fork error");
-                } else if (pid == 0) {      /* child */
+         // struct command cmd [] = { {execArgs}, {sec}};       
+         // return fork_pipes (2, cmd); 
+                if ((pid=fork()) == 0) {      /* child */
                         // execvp("ls", argv);
-                         
-                         
-                       
-                        execvp(sec[0], sec);
+                        
+                    if(sec[0])
+                    {     
+                        close(STDOUT_FILENO);         
+                        close(p[0]);
+                        dup2(p[1],STDOUT_FILENO);      
+                    }
+                        execvp(execArgs[0], execArgs);
 
                         err_ret("couldn't execute: %s", execArgs);
                          exit(127);
                     }
-                /* parent */
-                if ((pid = waitpid(pid, &status, 0)) < 0)
-                        err_sys("waitpid error");
 
-      
+                if(sec[0])
+                {    
+                    printf("In second process : %s\n",sec[0]);
+                if (fork() == 0) {      /* second child */
+                        // execvp("ls", argv);
+                         
+                        close(STDIN_FILENO);         
+                        close(p[1]);
+                        dup2(p[0],STDIN_FILENO);      
+                        execvp(sec[0], sec);
+
+                        err_ret("couldn't execute: %s", sec);
+                        exit(127);
+                    }
+                }
+
+                /* parent */
+                close(p[0]);
+                close(p[1]);
+                if ((pid = waitpid(-1, &status, WNOHANG)) < 0)
+                        err_sys("waitpid error");
+                // if(wait(&status)<0)
+                //     err_sys(" " );
+                //waitpid(pid, &status, 0);
         
     
             }
